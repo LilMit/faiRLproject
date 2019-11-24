@@ -24,7 +24,7 @@ def my_prints():
                                  0      1       2
     # get_action_meanings() = ['NOOP', 'UP', 'DOWN']
 
-    # 0 == no operation/no move env.step(0)
+z    # 0 == no operation/no move env.step(0)
     # 1 == up       env.step(1)
     # 2 == down     env.step(2)
     '''
@@ -32,27 +32,48 @@ def my_prints():
     '''
     # R   G   B
     # 0   0   0   = black
-    # 170 170 170 = grey
+    # 214 214 214 = white grey (dashed lines)
+    # 170 170 170 = light grey (bottom/top chicken begin/goal location)
+    # 142 142 142 = dark grey (ROAD)
     # 228 111 111 = pink
-    # 252 252 84  = yellow
+    # 252 252 84  = yellow (chicken)
+    # 142 142 142 = dotted lines 
     '''
 
+# use to find a specific color (yellow/chicken) and to print out the i/j value
+# change i,j values to find the area to search. bottom left quadrant is ~approx i=185-210, j=0-80
+# (left) chicken lives within j=44-48
 def state_find_colors(state):
 
     # row
-    for i in range(185, 210):
+    for i in range(0, 210):
 
         #col
-        for j in range(0, 80):
+        for j in range(40, 55):
 
-            #if (np.array_equal(state[i][j], np.array([241, 252, 135]))):
+            #YELLOW find
+            #if (np.array_equal(state[i][j], np.array([252, 252, 84]))):
+            #BLACK exclude
             if (np.array_equal(state[i][j], np.array([0, 0, 0])) == False and\
+            #whiteGREY exclude
+            np.array_equal(state[i][j], np.array([214, 214, 214])) == False and\
+            #lightGREY exclude
             np.array_equal(state[i][j], np.array([170, 170, 170])) == False and\
-            np.array_equal(state[i][j], np.array([228, 111, 111])) == False):
+            #darkGREY exclude
+            np.array_equal(state[i][j], np.array([142, 142, 142])) == False and\
+            #YELLOW exclude
+            np.array_equal(state[i][j], np.array([252, 252, 84])) == False and\
+            #PINK exclude               
+            np.array_equal(state[i][j], np.array([228, 111, 111])) == False): 
                
-                print(state[i][j])
+                print("color= ", state[i][j], "i= ", i, "j=", j)
 
+
+                
+            
             #print("state[", i, "][", j, "] = ", state[i][j])
+
+    print("========================================")
 
 class QAgent():
 
@@ -66,17 +87,18 @@ class QAgent():
         self.discount = float(gamma)
         self.numTraining = int(numTraining)
     
-    # sums grey tiles only on the left half of map
+    # sums grey tiles in the chicken column
     def sum_grey(self, state):
 
-        sum = 0
+        sum_grey = 0
 
-        for i in range(185, 210):
-            for j in range(0, 80):
+        for i in range(0, 210):
+            for j in range(44, 50):
                 if np.array_equal(state[i][j], np.array([170, 170, 170])):
-                    sum += 1
+                    sum_grey += 1
 
-        return sum
+        #print(sum_grey)
+        return sum_grey
 
     def getFeatures(self, state, action):
 
@@ -106,12 +128,16 @@ class QAgent():
         
         for feature in old_features_dict:
 
-            print("feature", feature)
-            print("self.alpha", self.alpha)
-            print("difference", difference)
-            print("old_features_dict[feature]", old_features_dict[feature])
+##            print("feature", feature)
+##            print("self.alpha", self.alpha)
+##            print("difference", difference)
+##            print("old_features_dict[feature]", old_features_dict[feature])
 
             self.feature_weights[feature] += self.alpha * difference * old_features_dict[feature]
+
+    def choose_action():
+
+        return
     
 def main():
 
@@ -129,10 +155,12 @@ def main():
         action = 1
         obs = env.render()
         
+        
         old_q_value = q_agent.getQValue(state, 1)
         old_features_dict = q_agent.getFeatures(state, action)
         
         state, reward, done, _ = env.step(action)
+        state_find_colors(state)
         
         new_q_value = q_agent.getQValue(state, 1)
 

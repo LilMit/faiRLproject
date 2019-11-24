@@ -28,7 +28,7 @@ class QAgent():
         self.chicken_x = STARTROW
         self.chicken_y = 48
         self.distanceFromGoal = self.chicken_x - GOALROW
-        self.feature_weights = {"grey_pixels": .1}
+        self.feature_weights = {"grey_pixels": .1, "grey_ahead": .5}
 
     def find_chicken(self,state):
         for i in range(self.x-2, self.x+2):

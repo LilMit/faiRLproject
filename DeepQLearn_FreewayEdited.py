@@ -36,7 +36,30 @@ def my_prints():
     # 170 170 170 = grey
     # 228 111 111 = pink
     # 252 252 84  = yellow
-    '''
+    # 142 142 142 = gray
+    # Row 195+ = bottom black border
+    # 
+    # Activision logo: 196,25-196,43: T and V stripe at top of activision logo
+    # 194, 111 - 194,112 right chicken
+    # 194 0-7 left border
+    # row 187-194, cols 44-49 left chicken
+    # road lines at 102 44-47, 104 44-47, cars change direction here
+    # left chicken center point: 191, 48
+    # road : 184-
+    # lane dividers, top to bottom:
+    # 39, 55, 71, 87, 102-104 MIDDLE, 119, 135, 151, 167
+    '''    
+YELLOW = [252,252,84]
+PINK = [228,111,111]
+BLACK = [0,0,0]
+SIDEWALKGRAY = [170,170,170]
+ROADGRAY = [142,142,142]
+DARKBLUE = [24,26,167]
+UGLYYELLOW = [105,105,15]
+WHITELINES = [214,214,214]
+GOALROW=0
+STARTROW = 191
+
 
 def state_find_colors(state):
 
@@ -46,14 +69,17 @@ def state_find_colors(state):
         #col
         for j in range(0, 80):
 
+            if(np.array_equal(state[i][j]),np.array([252,252,84])):
             #if (np.array_equal(state[i][j], np.array([241, 252, 135]))):
-            if (np.array_equal(state[i][j], np.array([0, 0, 0])) == False and\
-            np.array_equal(state[i][j], np.array([170, 170, 170])) == False and\
-            np.array_equal(state[i][j], np.array([228, 111, 111])) == False):
+            # if (np.array_equal(state[i][j], np.array([0, 0, 0])) == False and\
+            # np.array_equal(state[i][j], np.array([170, 170, 170])) == False and\
+            # np.array_equal(state[i][j], np.array([228, 111, 111])) == False):
                
-                print(state[i][j])
+                print(i,j)
 
             #print("state[", i, "][", j, "] = ", state[i][j])
+# def find_yellow():
+#     for i in range(185, 210):            
 
 class QAgent():
 
@@ -66,6 +92,9 @@ class QAgent():
         self.epsilon = float(epsilon)
         self.discount = float(gamma)
         self.numTraining = int(numTraining)
+        self.x = STARTROW
+        self.y = 48
+        self.distanceFromGoal = self.x - self.GOALROW
     
     # sums grey tiles only on the left half of map
     def sum_grey(self, state):
@@ -79,12 +108,26 @@ class QAgent():
 
         return sum
 
+    def gray_ahead(self, state):
+        return np.array_equal(state[self.x + 3][self.y], np.array(ROADGRAY))
+
+    def find_chicken(self,state):
+        for i in range(self.x-2, self.x+2):
+            if np.array_equal(state[i][self.y], np.array(YELLOW)):
+                self.x = i
+                return
+
+
+    def getLives(self):
+        return env.ale.lives()   
+
     def getFeatures(self, state, action):
 
         #if action is stay still = return -1
 
         feature_dict = {}
         feature_dict["grey_pixels"] = self.sum_grey(state)
+        feature_dict["num_lives"] = self.getLives()
         
         return feature_dict
 

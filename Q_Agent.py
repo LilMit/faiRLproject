@@ -3,6 +3,8 @@ import numpy as np
 import random
 import features
 import helpers
+import util
+
 env = gym.make('Freeway-v0')
 
 YELLOW = [252,252,84]
@@ -29,33 +31,77 @@ class QAgent():
         self.chicken_y = 48
         self.distanceFromGoal = self.chicken_x - GOALROW
         self.feature_weights = {"grey_pixels": .1, "grey_ahead": .5}
+        self.actions = [0,1,2]
+        self.weights = util.Counter()
 
     def find_chicken(self,state):
-        for i in range(self.x-2, self.x+2):
-            if np.array_equal(state[i][self.y], np.array(YELLOW)):
-                self.x = i
-                return
+        for i in range(10,194):
+            if np.array_equal(state[i][self.chicken_y], np.array(YELLOW)):
+                self.chicken_x = i
+                return (i)
 
-    def getQValue(self, state, action, feature_values):
+    def getWeights(self):
+        return self.weights     
 
-        q_value = 0
+    def getQValue(self, state, action):
 
-        for feature, value in feature_values.items():
-            q_value += value * self.feature_weights[feature]
-        return q_value
+        total = 0.0
+        feats = features.getFeatures(state, action)
 
-    def update(self, old_q_value, new_q_value, new_features_value, reward):
+        if not feats:
+            return 0.0
 
-        difference = reward + (self.discount * new_q_value) - old_q_value
+        for key in feats.keys():
+            if key in self.weights:
+                total += (self.weights[key] * feats[key])
+        return total
+    
+    def computeValueFromQValues(self, state):
+        action = self.computeActionFromQValues(state)
+        if action == None:
+          return 0.0
+          
+        return self.getQValue(state,action)
+
+    def computeActionFromQValues(self, state):
+        maximum = -9999999999
+
+        bestAction = None
+        for action in self.actions:
+          value = self.getQValue(state,action)
+          if value > maximum:
+            maximum = value
+            bestAction = action
+          elif value == maximum:
+            bestAction = random.choice([action, bestAction])
+          
+        return bestAction
+
+    def update(self, state, action, nextState, reward):
+
+        value = self.getQValue(state,action)
+        maxNext = self.computeValueFromQValues(nextState)
+        difference = (reward + (self.discount*maxNext)-value)
+        feats = features.getFeatures(state,action)
+        if not feats:
+          return
+
+        for feature in feats:
+          if feature not in self.weights:
+            self.weights[feature] = 0.0
+          temp = self.weights[feature] + (self.alpha * difference * feats[feature])
+          self.weights[feature] = temp
+
+#         difference = reward + (self.discount * new_q_value) - old_q_value
         
-        for feature, value in new_features_value.items():
+#         for feature, value in new_features_value.items():
 
-##            print("feature", feature)
-##            print("self.alpha", self.alpha)
-##            print("difference", difference)
-##            print("old_features_dict[feature]", old_features_dict[feature])
+# ##            print("feature", feature)
+# ##            print("self.alpha", self.alpha)
+# ##            print("difference", difference)
+# ##            print("old_features_dict[feature]", old_features_dict[feature])
 
-            self.feature_weights[feature] += self.alpha * difference * new_features_value[feature]
+#             self.feature_weights[feature] += self.alpha * difference * new_features_value[feature]
 
     def artificial_reward(old_row, new_row):
         return

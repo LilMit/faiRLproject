@@ -27,9 +27,15 @@ def grey_ahead(state, chicken_x, chicken_y):
     
     return np.array_equal(state[chicken_x + 3][chicken_y], np.array(ROADGRAY))
 
-def getLives(self):
+def getLives(self,env):
     
     return env.ale.lives() 
+
+def getFeatures(self,state,action,env):
+    features = util.Counter()
+    lives = self.getLives(env)
+    env.step(action)
+
 
 '''
 Calculates the value for all features
